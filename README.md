@@ -1,8 +1,6 @@
 -----------------------------------
 ## Sudoku
 
-![$(Game Title)](screenshots/title.png "$(Game Title)")
-
 ### Description
 
 $(Your Game Description)
@@ -17,9 +15,11 @@ Keyboard:
 ### Screenshots
 
 
-![$(Loading Screen)](screenshots/loading_screen.png "$(Loading Screen)")
+![(Loading Screen)](screenshots/loading_screen.png "(Loading Screen)")
 
-_TODO: Show your game to the world, animated GIFs recommended!._
+![(Board)](screenshots/ingame.png "(Board)")
+
+![(Board Highlighting)](screenshots/ingame_highlighting.png "(Board Highlighting)")
 
 ### License
 
