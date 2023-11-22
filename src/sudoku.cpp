@@ -5,11 +5,24 @@
 #include <iterator>
 #include <raylib.h>
 #include <set>
+#include "sudoku_screen.hpp"
+
+using namespace std;
 
 Board::Board() {
   for (int i = 0; i < 9; i++) {
     for (int j = 0; j < 9; j++) {
       board[i][j] = Cell('0', false, i, j, { leftMargin + i*cellWidth, topMargin + j*cellHeight, cellWidth, cellHeight });
+    }
+  }
+  clickedCell = nullptr;
+  faultyCell = nullptr;
+}
+
+Board::Board(array<array<char, 9>, 9> _board) {
+  for (int i = 0; i < 9; i++) {
+    for (int j = 0; j < 9; j++) {
+      board[i][j] = Cell(_board[i][j], false, i, j, { leftMargin + i*cellWidth, topMargin + j*cellHeight, cellWidth, cellHeight });
     }
   }
   clickedCell = nullptr;
@@ -50,7 +63,6 @@ void Board::Update() {
     if (clickedCell == faultyCell || faultyCell == nullptr) {
       int keyPressed = GetKeyPressed();
       if (keyPressed >= KEY_ONE && keyPressed <= KEY_NINE) {
-        int oldDigit = clickedCell->digit;
         clickedCell->digit = keyPressed - KEY_ONE + '1';
         if (!canPlace(clickedCell)) {
           faultyCell = clickedCell;
@@ -64,7 +76,7 @@ void Board::Update() {
 }
 
 void Board::Draw() {
-  DrawRectangle(leftMargin-1, topMargin-1, boardBackground.width, boardBackground.height, backgroundColor);
+  DrawRectangle(leftMargin-1, topMargin-1, SudokuScreen::boardBackground.width, SudokuScreen::boardBackground.height, backgroundColor);
   auto adjacents = adjacentTo(clickedCell);
   auto brothers = sameDigit(clickedCell);
   for (auto cell : adjacents) {
@@ -76,18 +88,18 @@ void Board::Draw() {
   for (int i = 0; i < 9; i++) {
     for (int j = 0; j < 9; j++) {
       Cell cell = board[i][j];
-      DrawTexture(cellTextures[cell.digit - '0'], cell.bounds.x, cell.bounds.y, Color{255, 255, 255 ,255});
+      DrawTexture(SudokuScreen::cellTextures[cell.digit - '0'], cell.bounds.x, cell.bounds.y, WHITE);
     }
   }
   if (clickedCell != nullptr) {
     DrawRectangleRec(clickedCell->bounds, clickedColor);
-    DrawTexture(cellTextures[clickedCell->digit - '0'], clickedCell->bounds.x, clickedCell->bounds.y, Color{255, 255, 255 ,255});
+    DrawTexture(SudokuScreen::cellTextures[clickedCell->digit - '0'], clickedCell->bounds.x, clickedCell->bounds.y, WHITE);
   } 
   if (faultyCell != nullptr) {
     DrawRectangleRec(faultyCell->bounds, faultyColor);
-    DrawTexture(cellTextures[faultyCell->digit - '0'], faultyCell->bounds.x, faultyCell->bounds.y, Color{255, 255, 255 ,255});
+    DrawTexture(SudokuScreen::cellTextures[faultyCell->digit - '0'], faultyCell->bounds.x, faultyCell->bounds.y, WHITE);
   }
-  DrawTexture(boardBackground, leftMargin-1, topMargin-1, Color{255, 255, 255, 255}); // -1 because background is (width*9+2)x(height*9+2)
+  DrawTexture(SudokuScreen::boardBackground, leftMargin-1, topMargin-1, WHITE); // -1 because background is (width*9+2)x(height*9+2)
 }
 
 

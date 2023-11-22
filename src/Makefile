@@ -29,7 +29,7 @@
 PLATFORM              ?= PLATFORM_DESKTOP
 
 # Define project variables
-PROJECT_NAME          ?= raylib_game
+PROJECT_NAME          ?= sudoku
 PROJECT_VERSION       ?= 1.0
 PROJECT_BUILD_PATH    ?= .
 
@@ -163,7 +163,7 @@ endif
 
 # Define default C compiler: CC
 #------------------------------------------------------------------------------------------------
-CC = gcc
+CC = g++
 
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     ifeq ($(PLATFORM_OS),OSX)
@@ -213,7 +213,7 @@ endif
 #  -Wno-missing-braces  ignore invalid warning (GCC bug 53119)
 #  -Wno-unused-value    ignore unused return values of some functions (i.e. fread())
 #  -D_DEFAULT_SOURCE    use with -std=c99 on Linux and PLATFORM_WEB, required for timespec
-CFLAGS = -std=c99 -Wall -Wno-missing-braces -Wunused-result -D_DEFAULT_SOURCE
+CFLAGS = -Wall -O2 -Wno-missing-braces -Wunused-result -D_DEFAULT_SOURCE
 
 ifeq ($(BUILD_MODE),DEBUG)
     CFLAGS += -g -D_DEBUG
@@ -400,12 +400,11 @@ endif
 # Define source code object files required
 #------------------------------------------------------------------------------------------------
 PROJECT_SOURCE_FILES ?= \
-    raylib_game.c \
-    screen_logo.c \
-    screen_title.c \
-    screen_options.c \
-    screen_gameplay.c \
-    screen_ending.c
+    game.cpp \
+		sudoku.cpp \
+		board_generator.cpp \
+		loading_screen.cpp \
+		sudoku_screen.cpp \
 
 # Define all object files from source files
 OBJS = $(patsubst %.c, %.o, $(PROJECT_SOURCE_FILES))

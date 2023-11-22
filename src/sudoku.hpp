@@ -1,10 +1,8 @@
 #pragma once
+
 #include "raylib.h"
 #include <array>
 #include <set>
-
-extern Texture2D boardBackground;
-extern Texture2D cellTextures[10];
 
 const float cellWidth = 70.0f;
 const float cellHeight = 70.0f;
@@ -26,12 +24,11 @@ struct Cell {
   int row;
   int col;
   Rectangle bounds;
-  // bool hover;
-  // texture for each digit... might be a global array?
 };
 
 struct Board {
   Board();
+  Board(std::array<std::array<char, 9>, 9> _board);
   
   void Update();
   void Draw();

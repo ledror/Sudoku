@@ -1,6 +1,7 @@
 #include "board_generator.hpp"
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cstdlib>
 #include <exception>
 #include <random>
@@ -27,11 +28,7 @@ std::array<std::array<char, 9>, 9> SudokuGenerator::generateFullBoard() {
 
   shuffle(indecies.begin(), indecies.end(), rng);
 
-  int inserted = 0;
-
   for (auto index : indecies) {
-    inserted++;
-    cout << "inserted: " << inserted << endl;
     int row = index/9;
     int col = index%9;
     auto validChars = getValidChars(board, row, col);
@@ -53,34 +50,47 @@ std::array<std::array<char, 9>, 9> SudokuGenerator::generateFullBoard() {
 }
 
 std::array<std::array<char, 9>, 9> SudokuGenerator::generatePlayableBoard() {
-  auto fullBoard = generateFullBoard();
-
-  vector<int> indecies;
-  for (int i = 0; i < 81; i++) {
-    indecies.push_back(i);
-  }
-
-  auto rd = random_device {};
-  auto rng = default_random_engine { rd() };
-  shuffle(indecies.begin(), indecies.end(), rng);
+  stopwatch = std::chrono::high_resolution_clock::now();
   
-  int reviewed = 0;
+  std::array<std::array<char, 9>, 9> fullBoard;
 
-  for (auto index : indecies) {
-    reviewed++;
-    std::cout << "reviewed: " << reviewed << std::endl;
-    int row = index/9;
-    int col = index%9;
-    char oldDigit = fullBoard[row][col];
-    fullBoard[row][col] = '0';
-    SolutionOptions state = boardSolutionState(fullBoard);
-    if (state == SolutionOptions::UNIQUE_SOLUTION) {
-      continue;
-    } else if (state == SolutionOptions::MULTIPLE_SOLUTIONS) {
-      fullBoard[row][col] = oldDigit;
-      continue;
-    } else {
-      throw runtime_error("removing digit made the board unsolvable??");
+  bool generated = false;
+
+  while(!generated) {
+    try {
+      fullBoard = generateFullBoard();
+
+      vector<int> indecies;
+      for (int i = 0; i < 81; i++) {
+        indecies.push_back(i);
+      }
+
+      auto rd = random_device {};
+      auto rng = default_random_engine { rd() };
+      shuffle(indecies.begin(), indecies.end(), rng);
+      
+      for (auto index : indecies) {
+        int row = index/9;
+        int col = index%9;
+        char oldDigit = fullBoard[row][col];
+        fullBoard[row][col] = '0';
+        SolutionOptions state = boardSolutionState(fullBoard);
+        if (state == SolutionOptions::UNIQUE_SOLUTION) {
+          continue;
+        } else if (state == SolutionOptions::MULTIPLE_SOLUTIONS) {
+          fullBoard[row][col] = oldDigit;
+          continue;
+        } else {
+          throw runtime_error("removing digit made the board unsolvable??");
+        }
+      }
+      
+      generated = true;
+    } catch(const runtime_error& e) {
+      throw e;
+    } catch(const std::chrono::milliseconds& e) {
+      std::cout << "generation took too long (" << e.count() << "ms), trying again" << std::endl;
+      stopwatch = std::chrono::high_resolution_clock::now();
     }
   }
 
@@ -88,6 +98,13 @@ std::array<std::array<char, 9>, 9> SudokuGenerator::generatePlayableBoard() {
 }
 
 bool SudokuGenerator::solveRecForward(std::array<std::array<char, 9>, 9>& board, int oldCell) {
+  auto timeNow = std::chrono::high_resolution_clock::now();
+  
+  auto passedMicroseconds = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - stopwatch);
+  if (passedMicroseconds > std::chrono::milliseconds(1000)) {
+    throw passedMicroseconds;
+  }
+
   int cell = nextFreeCell(board, oldCell);
   if (cell == -1) {
       return true;
@@ -109,6 +126,13 @@ bool SudokuGenerator::solveRecForward(std::array<std::array<char, 9>, 9>& board,
 }
 
 bool SudokuGenerator::solveRecBackward(std::array<std::array<char, 9>, 9>& board, int oldCell) {
+  auto timeNow = std::chrono::high_resolution_clock::now();
+  
+  auto passedMicroseconds = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - stopwatch);
+  if (passedMicroseconds > std::chrono::milliseconds(1000)) {
+    throw passedMicroseconds;
+  }
+
   int cell = nextFreeCell(board, oldCell);
   if (cell == -1) {
       return true;

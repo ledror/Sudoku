@@ -1,3 +1,6 @@
+#pragma once
+
+#include <chrono>
 #include <vector>
 #include <array>
 
@@ -9,6 +12,8 @@ public:
   std::array<std::array<char, 9>, 9> generatePlayableBoard();
 
 private:
+  std::chrono::time_point<std::chrono::system_clock> stopwatch;
+
   SolutionOptions boardSolutionState(const std::array<std::array<char, 9>, 9>& board);
   std::vector<char> getValidChars(std::array<std::array<char, 9>, 9>& board, int row, int col);
 

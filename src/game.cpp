@@ -1,46 +1,58 @@
 #include "raylib.h"
 #include "sudoku.hpp"
+#include "screens.hpp"
+#include "loading_screen.hpp"
+#include "board_generator.hpp"
+#include "sudoku_screen.hpp"
+#include <memory>
 
 static const int screenWidth = 800;
 static const int screenHeight = 800;
 
-Texture2D boardBackground;
-Texture2D cellTextures[10] = {0};
+std::shared_ptr<Screen> thisScreen;
+std::shared_ptr<Screen> nextScreen;
 
-void LoadBoardTextures();
+void LoadAllTextures();
+void UnloadAllTextures();
 
 int main() {
   InitWindow(screenWidth, screenHeight, "Sudoku");
 
-  LoadBoardTextures();
-  Board board;
+  LoadAllTextures();
+
+  thisScreen = std::make_shared<LoadingScreen>();
+  std::static_pointer_cast<LoadingScreen>(thisScreen)->GenerateBoard();
 
   SetTargetFPS(60);
 
   while(!WindowShouldClose()) {
-    board.Update();
+    if (thisScreen->ToTransition()) {
+      thisScreen = nextScreen;
+      nextScreen = nullptr;
+    }
+
+    thisScreen->Update();
+
     BeginDrawing();
 
     ClearBackground(GRAY);
     
-    board.Draw();
+    thisScreen->Draw();
 
     EndDrawing();
   }
 
+  UnloadAllTextures();
+
   CloseWindow();
 }
 
-void LoadBoardTextures() {
-  boardBackground = LoadTexture("resources/board_background.png");
-  cellTextures[0] = LoadTexture("resources/number_blank.png");
-  cellTextures[1] = LoadTexture("resources/number_one.png");
-  cellTextures[2] = LoadTexture("resources/number_two.png");
-  cellTextures[3] = LoadTexture("resources/number_three.png");
-  cellTextures[4] = LoadTexture("resources/number_four.png");
-  cellTextures[5] = LoadTexture("resources/number_five.png");
-  cellTextures[6] = LoadTexture("resources/number_six.png");
-  cellTextures[7] = LoadTexture("resources/number_seven.png");
-  cellTextures[8] = LoadTexture("resources/number_eight.png");
-  cellTextures[9] = LoadTexture("resources/number_nine.png");
+void LoadAllTextures() {
+  LoadingScreen::LoadLoadingScreenTextures();
+  SudokuScreen::LoadBoardTextures();
+}
+
+void UnloadAllTextures() {
+  LoadingScreen::UnloadLoadingScreenTextures();
+  SudokuScreen::UnloadBoardTextures();
 }
