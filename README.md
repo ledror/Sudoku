@@ -1,5 +1,5 @@
 -----------------------------------
-## $(Game Title)
+## Sudoku
 
 ![$(Game Title)](screenshots/title.png "$(Game Title)")
 
@@ -15,6 +15,9 @@ Keyboard:
  - $(Game Control 03)
 
 ### Screenshots
+
+
+![$(Loading Screen)](screenshots/loading_screen.png "$(Loading Screen)")
 
 _TODO: Show your game to the world, animated GIFs recommended!._
 
