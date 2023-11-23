@@ -1,82 +1,96 @@
 #include "sudoku.hpp"
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <raylib.h>
 #include <set>
+#include <stdexcept>
+#include "command.hpp"
+#include "sudoku_command.hpp"
 #include "sudoku_screen.hpp"
 
 using namespace std;
+using namespace sudokuscreen;
 
 Board::Board() {
   for (int i = 0; i < 9; i++) {
     for (int j = 0; j < 9; j++) {
-      board[i][j] = Cell('0', false, i, j, { leftMargin + i*cellWidth, topMargin + j*cellHeight, cellWidth, cellHeight });
+       board[i][j] = Cell::CreateCell(i, j);
     }
   }
   clickedCell = nullptr;
   faultyCell = nullptr;
 }
 
-Board::Board(array<array<char, 9>, 9> _board) {
+Board::Board(array<array<char, 9>, 9> _board) : Board() {
   for (int i = 0; i < 9; i++) {
     for (int j = 0; j < 9; j++) {
-      board[i][j] = Cell(_board[i][j], false, i, j, { leftMargin + i*cellWidth, topMargin + j*cellHeight, cellWidth, cellHeight });
+      board[i][j].digit = _board[i][j];
     }
   }
-  clickedCell = nullptr;
-  faultyCell = nullptr;
 }
 
-void Board::Update() {
+Cell* Board::cellOnMouse() {
   Vector2 mousePos = GetMousePosition();
+  int i = std::floor((mousePos.x - leftMargin) / cellWidth);
+  int j = std::floor((mousePos.y - topMargin) / cellHeight);
+  if (i < 0 || i > 8 || j < 0 || j > 8) {
+    return nullptr;
+  }
+  return &board[i][j];
+}
+
+void Board::updateClickedCell() {
   if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-    Cell* newClicked = nullptr;
-    bool found = false;
-    for (int i = 0; i < 9; i++) {
-      for (int j = 0; j < 9; j++) {
-        if (CheckCollisionPointRec(mousePos, board[i][j].bounds)) {
-          found = true;
-          newClicked = &board[i][j];
-          if (newClicked == clickedCell) {
-            newClicked->clicked = !newClicked->clicked;
-            clickedCell = nullptr;
-          } else {
-            newClicked->clicked = true;
-            if (clickedCell != nullptr) {
-              clickedCell->clicked = false;
-            }
-            clickedCell = newClicked;
-          }
-        }
-      }
-    }
-    if (!found) {
-      if (clickedCell != nullptr) {
-        clickedCell->clicked = false;
+    Cell* cell = cellOnMouse();
+    if (cell == nullptr) {
+      clickedCell = nullptr;
+    } else {
+      if (cell == clickedCell) {
         clickedCell = nullptr;
+      } else {
+        clickedCell = cell;
       }
     }
   }
+}
+
+shared_ptr<CellCommand> Board::getCommand() {
   if (clickedCell != nullptr) { // there's a selected cell
     if (clickedCell == faultyCell || faultyCell == nullptr) {
       int keyPressed = GetKeyPressed();
-      if (keyPressed >= KEY_ONE && keyPressed <= KEY_NINE) {
-        clickedCell->digit = keyPressed - KEY_ONE + '1';
-        if (!canPlace(clickedCell)) {
+      if (keyPressed >= KEY_ONE && keyPressed <= KEY_NINE && keyPressed != clickedCell->digit) {
+        if (!canPlace(clickedCell, keyPressed)) {
           faultyCell = clickedCell;
         } else {
           faultyCell = nullptr;
         }
+        return make_shared<CellCommand>(clickedCell, keyPressed - KEY_ONE + '1');
       }
     }
   }
-  return;
+  return nullptr;
 }
 
+void Board::Update() {
+  updateClickedCell();
+  resolveFaulty();
+}
+
+void Board::resolveFaulty() {
+  if (faultyCell == nullptr) {
+    return;
+  }
+  if (canPlace(faultyCell, faultyCell->digit)) {
+    faultyCell = nullptr;
+  }
+}
+
+
 void Board::Draw() {
-  DrawRectangle(leftMargin-1, topMargin-1, SudokuScreen::boardBackground.width, SudokuScreen::boardBackground.height, backgroundColor);
   auto adjacents = adjacentTo(clickedCell);
   auto brothers = sameDigit(clickedCell);
   for (auto cell : adjacents) {
@@ -88,18 +102,17 @@ void Board::Draw() {
   for (int i = 0; i < 9; i++) {
     for (int j = 0; j < 9; j++) {
       Cell cell = board[i][j];
-      DrawTexture(SudokuScreen::cellTextures[cell.digit - '0'], cell.bounds.x, cell.bounds.y, WHITE);
+      DrawTexture(cellTextures[cell.digit - '0'], cell.bounds.x, cell.bounds.y, WHITE);
     }
   }
   if (clickedCell != nullptr) {
     DrawRectangleRec(clickedCell->bounds, clickedColor);
-    DrawTexture(SudokuScreen::cellTextures[clickedCell->digit - '0'], clickedCell->bounds.x, clickedCell->bounds.y, WHITE);
+    DrawTexture(cellTextures[clickedCell->digit - '0'], clickedCell->bounds.x, clickedCell->bounds.y, WHITE);
   } 
   if (faultyCell != nullptr) {
     DrawRectangleRec(faultyCell->bounds, faultyColor);
-    DrawTexture(SudokuScreen::cellTextures[faultyCell->digit - '0'], faultyCell->bounds.x, faultyCell->bounds.y, WHITE);
+    DrawTexture(cellTextures[faultyCell->digit - '0'], faultyCell->bounds.x, faultyCell->bounds.y, WHITE);
   }
-  DrawTexture(SudokuScreen::boardBackground, leftMargin-1, topMargin-1, WHITE); // -1 because background is (width*9+2)x(height*9+2)
 }
 
 
@@ -148,10 +161,16 @@ std::set<Cell*> Board::sameDigit(Cell* cell) {
 }
 
 
-bool Board::canPlace(Cell* cell) {
+bool Board::canPlace(Cell* cell, char digit) {
+  if (cell == nullptr) {
+    throw runtime_error("canPlace got nullptr as cell");
+  }
+  char oldDigit = cell->digit;
+  cell->digit = digit;
   std::set<Cell*> adjacents = adjacentTo(cell);
   std::set<Cell*> brothers = sameDigit(cell);
   std::vector<Cell*> intersection;
   std::set_intersection(adjacents.begin(), adjacents.end(), brothers.begin(), brothers.end(), std::back_inserter(intersection));
+  cell->digit = oldDigit;
   return intersection.size() == 0;
 }

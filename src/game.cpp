@@ -49,10 +49,10 @@ int main() {
 
 void LoadAllTextures() {
   LoadingScreen::LoadLoadingScreenTextures();
-  SudokuScreen::LoadBoardTextures();
+  sudokuscreen::LoadBoardTextures();
 }
 
 void UnloadAllTextures() {
   LoadingScreen::UnloadLoadingScreenTextures();
-  SudokuScreen::UnloadBoardTextures();
+  sudokuscreen::UnloadBoardTextures();
 }

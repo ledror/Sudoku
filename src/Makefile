@@ -405,9 +405,12 @@ PROJECT_SOURCE_FILES ?= \
 		board_generator.cpp \
 		loading_screen.cpp \
 		sudoku_screen.cpp \
+		cell.cpp \
+		sudoku_command.cpp \
 
 # Define all object files from source files
-OBJS = $(patsubst %.c, %.o, $(PROJECT_SOURCE_FILES))
+OBJ_FILE = build
+OBJS = $(patsubst %.cpp, $(OBJ_FILE)/%.o, $(PROJECT_SOURCE_FILES))
 
 
 # Define processes to execute
@@ -432,7 +435,7 @@ $(PROJECT_NAME): $(OBJS)
 
 # Compile source files
 # NOTE: This pattern will compile every module defined on $(OBJS)
-%.o: %.c
+$(OBJ_FILE)/%.o: %.cpp
 	$(CC) -c $< -o $@ $(CFLAGS) $(INCLUDE_PATHS) -D$(PLATFORM)
 
 run:
@@ -460,7 +463,7 @@ clean_shell_sh:
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     ifeq ($(PLATFORM_OS),LINUX)
 		find . -type f -executable -delete
-		rm -fv *.o
+		rm -fv $(OBJ_FILE)/*.o
     endif
     ifeq ($(PLATFORM_OS),OSX)
 		find . -type f -perm +ugo+x -delete

@@ -8,6 +8,8 @@
 #include "sudoku_screen.hpp"
 #include "board_generator.hpp"
 
+using sudokuscreen::SudokuScreen;
+
 std::array<Texture2D, 3> LoadingScreen::loadingFrames;
 
 void boardGenerate(std::atomic<bool>& finished, std::array<std::array<char, 9>, 9>& board);

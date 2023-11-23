@@ -2,29 +2,26 @@
 
 #include "raylib.h"
 #include <array>
+#include <memory>
 #include <set>
-
-const float cellWidth = 70.0f;
-const float cellHeight = 70.0f;
-
-const float leftMargin = 100.0f;
-const float topMargin = 100.0f;
+#include "cell.hpp"
 
 const Color adjacentsColor{140, 180, 180, 255};
 const Color brothersColor{70, 140, 140, 255};
-const Color backgroundColor = RAYWHITE;
 const Color clickedColor = {100, 190, 255, 255};
 const Color faultyColor = {230, 41, 55, 255};
 
-struct Cell {
-  Cell(char _digit = '0', bool _clicked = false, int _row = 0, int _col = 0, Rectangle _bounds = { 0, 0, 0, 0 }) : digit(_digit), clicked(_clicked), row(_row), col(_col), bounds(_bounds) {}
+// struct Cell {
+//   Cell(char _digit = '0', int _row = 0, int _col = 0, Rectangle _bounds = { 0, 0, 0, 0 }) : digit(_digit), row(_row), col(_col), bounds(_bounds) {}
+//   static Cell CreateCell(int _row, int _col);
+//
+//   char digit;
+//   int row;
+//   int col;
+//   Rectangle bounds;
+// };
 
-  char digit;
-  bool clicked;
-  int row;
-  int col;
-  Rectangle bounds;
-};
+class CellCommand;
 
 struct Board {
   Board();
@@ -33,6 +30,11 @@ struct Board {
   void Update();
   void Draw();
 
+  Cell* cellOnMouse();
+  void updateClickedCell();
+  std::shared_ptr<CellCommand> getCommand();
+  void resolveFaulty();
+
   Cell* clickedCell;
   Cell* faultyCell;
   std::array<std::array<Cell, 9>, 9> board;
@@ -40,5 +42,5 @@ struct Board {
 private:
   std::set<Cell*> adjacentTo(Cell* cell);
   std::set<Cell*> sameDigit(Cell* cell);
-  bool canPlace(Cell* cell);
+  bool canPlace(Cell* cell, char digit);
 };
