@@ -49,16 +49,9 @@ void LoadingScreen::Draw() {
 }
 
 bool LoadingScreen::ToTransition() {
-  return toTransition && frameCounter/60 >= 3;
+  return toTransition && frameCounter/30 >= 2;
 }
 
 void LoadingScreen::GenerateBoard() {
   loadingThread = std::thread(&boardGenerate, std::ref(finishedLoading), std::ref(loadedBoard));
-}
-
-void boardGenerate(std::atomic<bool>& finished, std::array<std::array<char, 9>, 9>& board) {
-  SudokuGenerator gen;
-  board = gen.generatePlayableBoard();
-  finished = true;
-  std::cout << "Loading Board Finished\n";
 }

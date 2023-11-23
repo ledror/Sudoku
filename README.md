@@ -8,7 +8,7 @@ fun Sudoku project made in C++ using raylib
 ### Controls
 
 Keyboard: // TODO pencil, return to menu, ...
- - <BACKSPACE> - undo
+ - BACKSPACE - undo
  - $(Game Control 02)
  - $(Game Control 03)
 

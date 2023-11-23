@@ -51,6 +51,7 @@ std::array<std::array<char, 9>, 9> SudokuGenerator::generateFullBoard() {
 
 std::array<std::array<char, 9>, 9> SudokuGenerator::generatePlayableBoard() {
   stopwatch = std::chrono::high_resolution_clock::now();
+  callCounter = 0;
   
   std::array<std::array<char, 9>, 9> fullBoard;
 
@@ -91,6 +92,7 @@ std::array<std::array<char, 9>, 9> SudokuGenerator::generatePlayableBoard() {
     } catch(const std::chrono::milliseconds& e) {
       std::cout << "generation took too long (" << e.count() << "ms), trying again" << std::endl;
       stopwatch = std::chrono::high_resolution_clock::now();
+      callCounter = 0;
     }
   }
 
@@ -98,13 +100,16 @@ std::array<std::array<char, 9>, 9> SudokuGenerator::generatePlayableBoard() {
 }
 
 bool SudokuGenerator::solveRecForward(std::array<std::array<char, 9>, 9>& board, int oldCell) {
-  auto timeNow = std::chrono::high_resolution_clock::now();
-  
-  auto passedMicroseconds = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - stopwatch);
-  if (passedMicroseconds > std::chrono::milliseconds(1000)) {
-    throw passedMicroseconds;
+  callCounter++;
+  if (callCounter > MaxCallCounter) {
+    callCounter = 0;
+    auto timeNow = std::chrono::high_resolution_clock::now();
+    auto passedMicroseconds = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - stopwatch);
+    if (passedMicroseconds > std::chrono::milliseconds(MaxCallTimeout)) {
+      throw passedMicroseconds;
+    }
   }
-
+ 
   int cell = nextFreeCell(board, oldCell);
   if (cell == -1) {
       return true;
@@ -126,11 +131,14 @@ bool SudokuGenerator::solveRecForward(std::array<std::array<char, 9>, 9>& board,
 }
 
 bool SudokuGenerator::solveRecBackward(std::array<std::array<char, 9>, 9>& board, int oldCell) {
-  auto timeNow = std::chrono::high_resolution_clock::now();
-  
-  auto passedMicroseconds = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - stopwatch);
-  if (passedMicroseconds > std::chrono::milliseconds(1000)) {
-    throw passedMicroseconds;
+  callCounter++;
+  if (callCounter > MaxCallCounter) {
+    callCounter = 0;
+    auto timeNow = std::chrono::high_resolution_clock::now();
+    auto passedMicroseconds = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - stopwatch);
+    if (passedMicroseconds > std::chrono::milliseconds(MaxCallTimeout)) {
+      throw passedMicroseconds;
+    }
   }
 
   int cell = nextFreeCell(board, oldCell);
@@ -208,4 +216,11 @@ SolutionOptions SudokuGenerator::boardSolutionState(const std::array<std::array<
     }
   }
 
+}
+
+void boardGenerate(std::atomic<bool>& finished, std::array<std::array<char, 9>, 9>& board) {
+  SudokuGenerator gen;
+  board = gen.generatePlayableBoard();
+  finished = true;
+  std::cout << "Loading Board Finished\n";
 }

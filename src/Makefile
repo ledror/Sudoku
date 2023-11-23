@@ -407,6 +407,7 @@ PROJECT_SOURCE_FILES ?= \
 		sudoku_screen.cpp \
 		cell.cpp \
 		sudoku_command.cpp \
+		button.cpp \
 
 # Define all object files from source files
 OBJ_FILE = build
